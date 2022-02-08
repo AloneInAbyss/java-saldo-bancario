@@ -1,19 +1,25 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Scanner;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
+
+import java.io.FileReader;
+import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
         try {
-            File operacoes = new File("D:\\Arquivos\\Projetos\\Projetos\\Projetos IntelliJ\\calculadora-saldo-bancario\\src\\data\\operacoes.csv");
-            Scanner scanner = new Scanner(operacoes);
+            FileReader fileReader = new FileReader("D:\\Arquivos\\Projetos\\Projetos\\Projetos IntelliJ\\calculadora-saldo-bancario\\src\\data\\operacoes.csv");
+            CSVReader csvReader = new CSVReader(fileReader);
+            String[] nextRecord;
 
-            while (scanner.hasNextLine()) {
-                String data = scanner.nextLine();
-                System.out.println(data);
+            while ((nextRecord = csvReader.readNext()) != null) {
+                for (String cell : nextRecord) {
+                    System.out.print(cell + "\t");
+                }
+                System.out.println();
             }
-        } catch (FileNotFoundException e) {
-            System.out.println("Erro: " + e);
+
+        } catch (CsvValidationException | IOException e) {
+            e.printStackTrace();
         }
     }
 }
