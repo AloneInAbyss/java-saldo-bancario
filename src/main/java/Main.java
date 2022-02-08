@@ -4,20 +4,19 @@ import com.opencsv.exceptions.CsvValidationException;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
         String path = "D:\\Arquivos\\Projetos\\Projetos\\Projetos IntelliJ\\calculadora-saldo-bancario\\src\\data\\operacoes.csv";
         List<OperacaoBancaria> registros = lerConteudoDoArquivo(path);
         HashMap<String, List<OperacaoBancaria>> operacoesPorId = separarOperacoesPorConta(registros);
+        ordenarPorData(operacoesPorId);
 
-        for (String lista : operacoesPorId.keySet()) {
-             System.out.println(lista);
-        }
-        System.out.println();
+//        for (String lista : operacoesPorId.keySet()) {
+//             System.out.println(lista);
+//        }
+//        System.out.println();
 
          for (List<OperacaoBancaria> lista : operacoesPorId.values()) {
              for (OperacaoBancaria registro : lista) {
@@ -82,6 +81,20 @@ public class Main {
 
             arrayList.add(operacao);
             operacoesPorId.put(id, arrayList);
+        }
+
+        return operacoesPorId;
+    }
+
+    public static HashMap<String, List<OperacaoBancaria>> ordenarPorData(HashMap<String, List<OperacaoBancaria>> operacoesPorId) {
+        for (List<OperacaoBancaria> lista : operacoesPorId.values()) {
+            lista.sort(new Comparator<OperacaoBancaria>() {
+                public int compare(OperacaoBancaria o1, OperacaoBancaria o2) {
+                    if (o1.getData() == null || o2.getData() == null)
+                        return 0;
+                    return o1.getData().compareTo(o2.getData());
+                }
+            });
         }
 
         return operacoesPorId;
