@@ -2,28 +2,23 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
 
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        String path = "D:\\Arquivos\\Projetos\\Projetos\\Projetos IntelliJ\\calculadora-saldo-bancario\\src\\data\\operacoes.csv";
+        String path = "D:\\Arquivos\\Projetos\\Projetos\\Projetos IntelliJ\\calculadora-saldo-bancario\\src\\input\\operacoes.csv";
+        String pathExtratos = "D:\\Arquivos\\Projetos\\Projetos\\Projetos IntelliJ\\calculadora-saldo-bancario\\src\\output";
+
         List<OperacaoBancaria> registros = lerConteudoDoArquivo(path);
+
         HashMap<String, List<OperacaoBancaria>> operacoesPorId = separarOperacoesPorConta(registros);
+
         ordenarPorData(operacoesPorId);
 
-//        for (String lista : operacoesPorId.keySet()) {
-//             System.out.println(lista);
-//        }
-//        System.out.println();
+        HashMap<String, Float> saldos = gerarSaldos(operacoesPorId);
 
-         for (List<OperacaoBancaria> lista : operacoesPorId.values()) {
-             for (OperacaoBancaria registro : lista) {
-                 System.out.println(registro.getData());
-             }
-             System.out.println();
-         }
+        gerarExtratos(operacoesPorId, saldos, pathExtratos);
     }
 
     public static List<OperacaoBancaria> lerConteudoDoArquivo(String path) {
@@ -36,13 +31,9 @@ public class Main {
             String[] nextRecord;
             while ((nextRecord = csvReader.readNext()) != null) {
                 ArrayList<String> info = new ArrayList<>();
-                for (String cell : nextRecord) {
-                    info.add(cell);
-                    // System.out.print(cell + "\t");
-                }
+                Collections.addAll(info, nextRecord);
 
                 registros.add(converterArrayEmOperacaoBancaria(info));
-                // System.out.println();
             }
         } catch (CsvValidationException | IOException e) {
             e.printStackTrace();
@@ -86,17 +77,72 @@ public class Main {
         return operacoesPorId;
     }
 
-    public static HashMap<String, List<OperacaoBancaria>> ordenarPorData(HashMap<String, List<OperacaoBancaria>> operacoesPorId) {
+    public static void ordenarPorData(HashMap<String, List<OperacaoBancaria>> operacoesPorId) {
         for (List<OperacaoBancaria> lista : operacoesPorId.values()) {
-            lista.sort(new Comparator<OperacaoBancaria>() {
-                public int compare(OperacaoBancaria o1, OperacaoBancaria o2) {
-                    if (o1.getData() == null || o2.getData() == null)
-                        return 0;
-                    return o1.getData().compareTo(o2.getData());
-                }
+            lista.sort((o1, o2) -> {
+                if (o1.getData() == null || o2.getData() == null)
+                    return 0;
+                return o1.getData().compareTo(o2.getData());
             });
         }
+    }
 
-        return operacoesPorId;
+    public static HashMap<String, Float> gerarSaldos(HashMap<String, List<OperacaoBancaria>> operacoesPorId) {
+        HashMap<String, Float> saldos = new HashMap<>();
+
+        for (List<OperacaoBancaria> lista : operacoesPorId.values()) {
+            float saldo = 0;
+            for (OperacaoBancaria registro : lista) {
+                if (registro.getTipo() == TipoOperacao.DEPOSITO) {
+                    saldo += registro.getValor();
+                } else if (registro.getTipo() == TipoOperacao.SAQUE) {
+                    saldo -= registro.getValor();
+                }
+            }
+
+            saldos.put(lista.get(0).getConta().getId(), saldo);
+        }
+
+        return saldos;
+    }
+
+    public static void gerarExtratos(HashMap<String, List<OperacaoBancaria>> operacoesPorId, HashMap<String, Float> saldos, String path) {
+        new File(path).mkdir();
+        System.out.println("Arquivos salvos em: " + path + "\n");
+
+        for (List<OperacaoBancaria> lista : operacoesPorId.values()) {
+            String filename = lista.get(0).getConta().getId();
+            try {
+                File extrato = new File(path + "\\" + filename + ".txt");
+                BufferedWriter br = new BufferedWriter(new FileWriter(extrato, false));
+
+                for (OperacaoBancaria registro : lista) {
+                    System.out.print(registro.getData() + "\t");
+                    System.out.print(registro.getConta().getId() + "\t");
+                    System.out.print(registro.getConta().getBanco() + "\t");
+                    System.out.print(registro.getConta().getAgencia() + "\t");
+                    System.out.print(registro.getConta().getConta() + "\t");
+                    System.out.print(registro.getOperador() + "\t");
+                    System.out.print(registro.getTipo() + "\t");
+                    System.out.print(registro.getValor() + "\n");
+
+                    br.write(registro.getData() + "\t");
+                    br.write(registro.getConta().getId() + "\t");
+                    br.write(registro.getConta().getBanco() + "\t");
+                    br.write(registro.getConta().getAgencia() + "\t");
+                    br.write(registro.getConta().getConta() + "\t");
+                    br.write(registro.getOperador() + "\t");
+                    br.write(registro.getTipo() + "\t");
+                    br.write(registro.getValor() + "\n");
+                }
+                System.out.println("Saldo: R$" + saldos.get(lista.get(0).getConta().getId()));
+                System.out.println();
+
+                br.write("Saldo: R$" + saldos.get(lista.get(0).getConta().getId()));
+                br.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

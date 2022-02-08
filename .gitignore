@@ -2,6 +2,9 @@
 .gradle
 /build/
 
+# Custom
+output/
+
 # Ignore Gradle GUI config
 gradle-app.setting
 
