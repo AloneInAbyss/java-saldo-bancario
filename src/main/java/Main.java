@@ -1,4 +1,5 @@
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
 
 import java.io.FileReader;
@@ -8,7 +9,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             FileReader fileReader = new FileReader("D:\\Arquivos\\Projetos\\Projetos\\Projetos IntelliJ\\calculadora-saldo-bancario\\src\\data\\operacoes.csv");
-            CSVReader csvReader = new CSVReader(fileReader);
+            CSVReader csvReader = new CSVReaderBuilder(fileReader).withSkipLines(1).build();
             String[] nextRecord;
 
             while ((nextRecord = csvReader.readNext()) != null) {
