@@ -5,12 +5,26 @@ import com.opencsv.exceptions.CsvValidationException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
         String path = "D:\\Arquivos\\Projetos\\Projetos\\Projetos IntelliJ\\calculadora-saldo-bancario\\src\\data\\operacoes.csv";
         List<OperacaoBancaria> registros = lerConteudoDoArquivo(path);
+        HashMap<String, List<OperacaoBancaria>> operacoesPorId = separarOperacoesPorConta(registros);
+
+        for (String lista : operacoesPorId.keySet()) {
+             System.out.println(lista);
+        }
+        System.out.println();
+
+         for (List<OperacaoBancaria> lista : operacoesPorId.values()) {
+             for (OperacaoBancaria registro : lista) {
+                 System.out.println(registro.getData());
+             }
+             System.out.println();
+         }
     }
 
     public static List<OperacaoBancaria> lerConteudoDoArquivo(String path) {
@@ -25,11 +39,11 @@ public class Main {
                 ArrayList<String> info = new ArrayList<>();
                 for (String cell : nextRecord) {
                     info.add(cell);
-                    System.out.print(cell + "\t");
+                    // System.out.print(cell + "\t");
                 }
 
                 registros.add(converterArrayEmOperacaoBancaria(info));
-                System.out.println();
+                // System.out.println();
             }
         } catch (CsvValidationException | IOException e) {
             e.printStackTrace();
@@ -51,5 +65,25 @@ public class Main {
         String data = dados.get(0);
 
         return new OperacaoBancaria(operador, tipo, valor, data, contaBancaria);
+    }
+
+    public static HashMap<String, List<OperacaoBancaria>> separarOperacoesPorConta(List<OperacaoBancaria> registros) {
+        HashMap<String, List<OperacaoBancaria>> operacoesPorId = new HashMap<>();
+
+        for (OperacaoBancaria operacao : registros) {
+            String id = operacao.getConta().getId();
+            ArrayList<OperacaoBancaria> arrayList;
+
+            if (!operacoesPorId.containsKey(id)) {
+                arrayList = new ArrayList<>();
+            } else {
+                arrayList = (ArrayList<OperacaoBancaria>) operacoesPorId.get(id);
+            }
+
+            arrayList.add(operacao);
+            operacoesPorId.put(id, arrayList);
+        }
+
+        return operacoesPorId;
     }
 }
