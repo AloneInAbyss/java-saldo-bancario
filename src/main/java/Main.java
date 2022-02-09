@@ -112,9 +112,10 @@ public class Main {
 
         for (List<OperacaoBancaria> lista : operacoesPorId.values()) {
             String filename = lista.get(0).getConta().getId();
+            BufferedWriter br = null;
             try {
                 File extrato = new File(path + "\\" + filename + ".txt");
-                BufferedWriter br = new BufferedWriter(new FileWriter(extrato, false));
+                br = new BufferedWriter(new FileWriter(extrato, false));
 
                 for (OperacaoBancaria registro : lista) {
                     System.out.print(registro.getData() + "\t");
@@ -142,6 +143,12 @@ public class Main {
                 br.close();
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                try {
+                    if (br != null) br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
